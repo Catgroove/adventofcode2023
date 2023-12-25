@@ -6,6 +6,14 @@ defmodule Day4 do
   end
 
   def solve_puzzle(file) do
+    list1 = [1, 2, 3, 4, 5]
+    list2 = [3, 4, 5, 6, 7]
+    list3 = [2, 4]
+
+    result = list1 -- list2 -- list3
+
+    IO.inspect(result)
+
     file
     |> String.split("\n", trim: true)
     |> Enum.map(&parse_line/1)

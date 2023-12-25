@@ -5,84 +5,50 @@ defmodule Day5 do
     |> IO.inspect()
   end
 
-  def find_number(_current, start, stop, dest, range, search) when search > stop, do: search
-  def find_number(current, start, stop, dest, range, search) when search < current, do: search
-  def find_number(current, start, stop, dest, range, search) when current == stop, do: search
-
-  def find_number(current, start, stop, dest, range, search) when current == search,
-    do: current - start + dest
-
-  def find_number(current, start, stop, dest, range, search) when current != search,
-    do: find_number(current + 1, start, stop, dest, range, search)
-
   def solve_puzzle(file) do
-    # source = 3_642_212_803
-    # dest = 1_631_134_559
-    # range = 163_560_083
-    #
-    # find_number(source, source + range, 3_742_212_803, dest)
+    [seeds | maps] =
+      file
+      |> String.split("\n\n")
 
-    [seeds | maps] = String.split(file, "\n\n") |> Enum.map(&parse_string_line/1)
+    seeds =
+      seeds
+      |> String.trim_leading("seeds: ")
+      |> String.split(" ")
+      |> Enum.map(&String.to_integer(&1))
 
     maps =
       maps
-      |> Enum.map(fn nums ->
-        Enum.map(nums, fn n ->
-          List.to_tuple(n)
-        end)
-        |> List.flatten()
-      end)
+      |> Enum.map(&parse_map/1)
 
     seeds
-    |> List.flatten()
-    |> Enum.map(&map_to_map_values(maps, &1))
-    |> IO.inspect()
+    |> Enum.map(&map_seed(&1, maps))
     |> Enum.min()
   end
 
-  def map_to_map_values([], val), do: val
-
-  def map_to_map_values([map | maps], val) do
-    IO.inspect(map, label: "map")
-    IO.inspect(val, label: "map")
-
-    map_to_map_values(maps, find_number_in_map(map, val))
+  def map_seed(seed, maps) do
+    maps
+    |> Enum.reduce(seed, fn map, seed_value ->
+      Enum.find_value(map, seed_value, fn {destination_start.._, source_range = source_start.._} ->
+        if seed_value in source_range, do: destination_start + seed_value - source_start
+      end)
+    end)
   end
 
-  def find_number_in_map([], val), do: val
+  def parse_map(map) do
+    [_ | values] =
+      map
+      |> String.split("\n")
+      |> Enum.reject(&(&1 == ""))
 
-  def find_number_in_map([{dest, source, range} | map], val) do
-    number = find_number(source, source, source + range, dest, range, val)
-
-    IO.inspect({dest, source, range}, label: "tuple")
-    IO.inspect(number, label: "number")
-    IO.inspect(val, label: "val")
-
-    cond do
-      number == val -> find_number_in_map(map, val)
-      true -> number
-    end
+    values |> Enum.map(&parse_map_values/1)
   end
 
-  def parse_string_line(line) do
-    [_, numbers] =
-      line
-      |> String.split(~r/[\w\-\s]+:[\n\s]+/)
-      |> Enum.map(&parse_line/1)
+  def parse_map_values(map) do
+    [destination, source, range] =
+      map
+      |> String.split(" ")
+      |> Enum.map(&String.to_integer(&1))
 
-    numbers
-  end
-
-  def parse_line(line) do
-    line
-    |> String.split("\n")
-    |> Enum.filter(&(&1 != ""))
-    |> Enum.map(&parse_numbers/1)
-  end
-
-  def parse_numbers(numbers) do
-    numbers
-    |> String.split(" ")
-    |> Enum.map(&String.to_integer/1)
+    {destination..(destination + range), source..(source + range)}
   end
 end

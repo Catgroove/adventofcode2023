@@ -16,10 +16,6 @@ defmodule Day8 do
       |> Enum.map(&map_node/1)
       |> Enum.reduce(%{}, &Map.merge/2)
 
-    #
-    # IO.inspect(map_instructions(instructions), label: "woof")
-    # IO.inspect(nodes, label: "nodes")
-
     traverse(map_instructions(instructions), nodes)
   end
 
